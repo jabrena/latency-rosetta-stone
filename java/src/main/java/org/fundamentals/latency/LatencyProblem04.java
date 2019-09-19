@@ -2,7 +2,6 @@ package org.fundamentals.latency;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Single;
 import io.vavr.CheckedFunction1;
 import io.vavr.Function1;
 import io.vavr.Function2;
@@ -23,7 +22,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 import static org.fundamentals.latency.SimpleCurl.fetch;
 import static org.fundamentals.latency.SimpleCurl.log;
@@ -42,7 +40,7 @@ import static org.fundamentals.latency.SimpleCurl.log;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class LatencyProblem04 implements IEulerType3<BigDecimal> {
+public class LatencyProblem04 {
 
     @Data
     @AllArgsConstructor
@@ -66,11 +64,6 @@ public class LatencyProblem04 implements IEulerType3<BigDecimal> {
     }
 
     private final Config config;
-
-    @Override
-    public BigDecimal JavaSolution() {
-        return null;
-    }
 
     Function<String, URL> toURLOld = address -> {
         try {
@@ -119,7 +112,6 @@ public class LatencyProblem04 implements IEulerType3<BigDecimal> {
         throw new RuntimeException(ex);
     });
 
-    @Override
     public BigDecimal JavaStreamSolution() {
 
         Stream<CompletableFuture<String>> requests = config.getList().stream()
@@ -134,26 +126,6 @@ public class LatencyProblem04 implements IEulerType3<BigDecimal> {
                 .mapToDouble(BigDecimal::doubleValue)
                 .average()
                 .getAsDouble());
-    }
-
-    @Override
-    public BigDecimal VAVRSolution() {
-        return null;
-    }
-
-    @Override
-    public Mono<BigDecimal> ReactorSolution() {
-        return null;
-    }
-
-    @Override
-    public Single<BigDecimal> RxJavaSolution() {
-        return null;
-    }
-
-    @Override
-    public BigDecimal KotlinSolution() {
-        return null;
     }
 
 }

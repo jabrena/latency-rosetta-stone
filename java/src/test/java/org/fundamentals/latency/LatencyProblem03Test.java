@@ -32,7 +32,7 @@ import static org.fundamentals.latency.LatencyProblem03.GODS.NORDIC;
 import static org.fundamentals.latency.LatencyProblem03.GODS.ROMAN;
 
 @Slf4j
-public class LatencyProblem03Test implements IEulerTestable {
+public class LatencyProblem03Test {
 
     WireMockServer wireMockServer;
 
@@ -45,12 +45,6 @@ public class LatencyProblem03Test implements IEulerTestable {
     @AfterEach
     public void teardown () {
         wireMockServer.stop();
-    }
-
-
-    @Override
-    public void given_JavaSolution_when_executeMethod_then_expectedResultsTest() {
-
     }
 
     private List<String> loadJsonFile(String file) {
@@ -71,7 +65,6 @@ public class LatencyProblem03Test implements IEulerTestable {
     }
 
     @Test
-    @Override
     public void given_JavaStreamSolution_when_executeMethod_then_expectedResultsTest() {
 
         final int TIMEOUT = 2;
@@ -145,26 +138,6 @@ public class LatencyProblem03Test implements IEulerTestable {
                 });
 
         executor.shutdown();
-    }
-
-    @Override
-    public void given_VAVRSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_ReactorSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_RxJavaSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_KotlinSolution_when_executeMethod_then_expectedResultsTest() {
-
     }
 
 }

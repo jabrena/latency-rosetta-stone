@@ -2,12 +2,10 @@ package org.fundamentals.latency;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Single;
 import io.vavr.control.Try;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +15,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 import static java.util.stream.Collectors.toList;
 import static org.fundamentals.latency.SimpleCurl.fetch;
@@ -40,7 +34,7 @@ import static org.fundamentals.latency.SimpleCurl.log;
  * REST API: https://my-json-server.typicode.com/jabrena/latency-problems
  */
 @Slf4j
-public class LatencyProblem01 implements IEulerType3<BigInteger> {
+public class LatencyProblem01 {
 
     private List<String> listOfGods;
     private ExecutorService executor;
@@ -50,11 +44,6 @@ public class LatencyProblem01 implements IEulerType3<BigInteger> {
         this.listOfGods = listOfGods;
         this.executor = executor;
         this.TIMEOUT = timeout;
-    }
-
-    @Override
-    public BigInteger JavaSolution() {
-        return null;
     }
 
     Function<String, URL> toURL = address -> Try.of(() ->
@@ -114,7 +103,6 @@ public class LatencyProblem01 implements IEulerType3<BigInteger> {
             .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
             .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
 
-    @Override
     public BigInteger JavaStreamSolution() {
 
         return fetchListAsync
@@ -123,129 +111,4 @@ public class LatencyProblem01 implements IEulerType3<BigInteger> {
                 .apply(listOfGods);
     }
 
-    @Override
-    public BigInteger VAVRSolution() {
-        return null;
-    }
-
-    private Scheduler scheduler = Schedulers.newElastic("MyScheduler");
-
-    Function<String, Flux<String>> serializeFlux = param -> Try.of(() -> {
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<String> deserializedData = objectMapper.readValue(param, new TypeReference<List<String>>() {});
-        return Mono.just(deserializedData).flatMapMany(Flux::fromIterable);
-    }).getOrElseThrow(ex -> {
-        LOGGER.error("Bad Serialization process", ex);
-        throw new RuntimeException(ex);
-    });
-
-    Function<Flux<String>, Flux<String>> filterGodsFlux = ls -> ls
-            .filter(godStartingByn)
-            .log();
-
-    Function<Flux<String>, Mono<BigInteger>> sumFlux = ls -> ls
-            .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-            .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
-
-    Function<Integer, Flux<String>> asyncFetchFlux = limit -> {
-        return Flux.range(0, limit)
-                .flatMap(i -> {
-                    return toURL
-                            .andThen(fetch)
-                            .andThen(serializeFlux)
-                            .apply(listOfGods.get(i));
-                })
-                .subscribeOn(scheduler);
-    };
-
-    public Mono<BigInteger> ReactorSolutionFunctionalComposition() {
-
-        return asyncFetchFlux
-                .andThen(filterGodsFlux)
-                .andThen(sumFlux)
-                .apply(listOfGods.size());
-    }
-
-    @Override
-    public Mono<BigInteger> ReactorSolution() {
-
-        return Flux.range(0, listOfGods.size())
-                .flatMap(i -> {
-                    return toURL
-                            .andThen(fetch)
-                            .andThen(serializeFlux)
-                            .apply(listOfGods.get(i));
-                })
-                .subscribeOn(scheduler)
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
-    }
-
-    private <T> Mono<T> blockingGet(final Callable<T> callable) {
-        return Mono.fromCallable(callable)
-                .subscribeOn(Schedulers.elastic());
-    }
-
-    Function<String, Flux<String>> fetchWrapper = s -> {
-
-        return blockingGet(() -> toURL
-                .andThen(fetch)
-                .andThen(serialize)
-                .andThen(st -> st.collect(toList()))
-                .apply(s)).flatMapMany(Flux::fromIterable);
-    };
-
-    public Mono<BigInteger> ReactorSolutionParallel() {
-
-        return Flux.range(0, listOfGods.size())
-                .flatMap(i -> fetchWrapper.apply(listOfGods.get(i)))
-                .subscribeOn(Schedulers.parallel())
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
-    }
-
-    public Mono<BigInteger> ReactorSolutionSequential() {
-
-        return Flux.range(0, listOfGods.size())
-                .flatMap(i -> {
-                    return toURL
-                            .andThen(fetch)
-                            .andThen(serializeFlux)
-                            .apply(listOfGods.get(i));
-                })
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
-    }
-
-    public Mono<BigInteger> ReactorSolutionAsync() {
-
-        return Flux.range(0, listOfGods.size())
-                .flatMap(i -> {
-                    return toURL
-                            .andThen(fetchAsync)
-                            .andThen(CompletableFuture::join)
-                            .andThen(serializeFlux)
-                            .apply(listOfGods.get(i));
-                })
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
-    }
-
-    @Override
-    public Single<BigInteger> RxJavaSolution() {
-        return null;
-    }
-
-    @Override
-    public BigInteger KotlinSolution() {
-        return null;
-    }
 }

@@ -16,7 +16,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @Slf4j
-public class LatencyProblem05Test implements IEulerTestable {
+public class LatencyProblem05Test {
 
     WireMockServer wireMockServer;
 
@@ -31,14 +31,7 @@ public class LatencyProblem05Test implements IEulerTestable {
         wireMockServer.stop();
     }
 
-
-    @Override
-    public void given_JavaSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
     @Test
-    @Override
     public void given_JavaStreamSolution_when_executeMethod_then_expectedResultsTest() {
 
         //Given
@@ -91,26 +84,6 @@ public class LatencyProblem05Test implements IEulerTestable {
                 .isEqualTo(List.of("Ares", "Athena", "Apollo", "Artemis", "Aphrodite"));
 
         executor.shutdown();
-    }
-
-    @Override
-    public void given_VAVRSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_ReactorSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_RxJavaSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_KotlinSolution_when_executeMethod_then_expectedResultsTest() {
-
     }
 
 }

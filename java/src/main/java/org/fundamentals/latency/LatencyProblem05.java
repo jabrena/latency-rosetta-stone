@@ -2,7 +2,6 @@ package org.fundamentals.latency;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.reactivex.Single;
 import io.vavr.Function1;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
@@ -20,7 +19,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 import static java.util.stream.Collectors.toList;
 import static org.fundamentals.latency.SimpleCurl.fetch;
@@ -43,7 +41,7 @@ import static org.fundamentals.latency.SimpleCurl.log;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class LatencyProblem05 implements IEulerType3<List<String>> {
+public class LatencyProblem05 {
 
     @Data
     @AllArgsConstructor
@@ -55,11 +53,6 @@ public class LatencyProblem05 implements IEulerType3<List<String>> {
     }
 
     private final Config config;
-
-    @Override
-    public List<String> JavaSolution() {
-        return null;
-    }
 
     Function1<String, Option<URL>> toURL = address ->
             Try.of(() -> new URL(address))
@@ -103,7 +96,6 @@ public class LatencyProblem05 implements IEulerType3<List<String>> {
         return Tuple.of(validAddressList.get(index), config);
     };
 
-    @Override
     public List<String> JavaStreamSolution() {
 
         return loadBalance
@@ -115,26 +107,6 @@ public class LatencyProblem05 implements IEulerType3<List<String>> {
                         .peek(System.out::println)
                         .collect(toList()))
                 .apply(config);
-    }
-
-    @Override
-    public List<String> VAVRSolution() {
-        return null;
-    }
-
-    @Override
-    public Mono<List<String>> ReactorSolution() {
-        return null;
-    }
-
-    @Override
-    public Single<List<String>> RxJavaSolution() {
-        return null;
-    }
-
-    @Override
-    public List<String> KotlinSolution() {
-        return null;
     }
 
 }

@@ -6,13 +6,15 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -20,7 +22,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @Slf4j
-public class LatencyProblem01Test implements IEulerTestable {
+public class LatencyProblem01Test {
 
     WireMockServer wireMockServer;
 
@@ -33,11 +35,6 @@ public class LatencyProblem01Test implements IEulerTestable {
     @AfterEach
     public void teardown () {
         wireMockServer.stop();
-    }
-
-    @Override
-    public void given_JavaSolution_when_executeMethod_then_expectedResultsTest() {
-
     }
 
     private void loadStubs() {
@@ -59,17 +56,16 @@ public class LatencyProblem01Test implements IEulerTestable {
     }
 
     @Test
-    @Override
     public void given_JavaStreamSolution_when_executeMethod_then_expectedResultsTest() {
 
         final int TIMEOUT = 2;
 
-        ExecutorService executor = Executors.newFixedThreadPool(10,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("MyExecutor");
-                    return thread;
-                });
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("MyExecutor-%d")
+                .build();
+        ExecutorService executor = Executors.newFixedThreadPool(
+                10,
+                threadFactory);
 
         loadStubs();
 
@@ -109,172 +105,6 @@ public class LatencyProblem01Test implements IEulerTestable {
         assertThat(problem.JavaStreamSolution()).isEqualTo(new BigInteger("78179288397447443426"));
 
         executor.shutdown();
-    }
-
-    @Override
-    public void given_VAVRSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Test
-    @Override
-    public void given_ReactorSolution_when_executeMethod_then_expectedResultsTest() {
-
-        final int TIMEOUT = 2;
-
-        ExecutorService executor = Executors.newFixedThreadPool(10,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("MyExecutor");
-                    return thread;
-                });
-
-        loadStubs();
-
-        final List<String> listOfGods = List.of(
-                "http://localhost:8090/greek",
-                "http://localhost:8090/roman",
-                "http://localhost:8090/nordic");
-
-        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
-
-        StepVerifier
-                .create(problem.ReactorSolution())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-
-        executor.shutdown();
-    }
-
-    @Test
-    public void given_ReactorSolutionFunctionalComposition_when_executeMethod_then_expectedResultsTest() {
-
-        final int TIMEOUT = 2;
-
-        ExecutorService executor = Executors.newFixedThreadPool(10,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("MyExecutor");
-                    return thread;
-                });
-
-        loadStubs();
-
-        final List<String> listOfGods = List.of(
-                "http://localhost:8090/greek",
-                "http://localhost:8090/roman",
-                "http://localhost:8090/nordic");
-
-        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
-
-        StepVerifier
-                .create(problem.ReactorSolutionFunctionalComposition())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-
-        executor.shutdown();
-    }
-
-    @Test
-    public void given_ReactorSolutionAsync_when_executeMethod_then_expectedResultsTest() {
-
-        final int TIMEOUT = 2;
-
-        ExecutorService executor = Executors.newFixedThreadPool(10,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("MyExecutor");
-                    return thread;
-                });
-
-        loadStubs();
-
-        final List<String> listOfGods = List.of(
-                "http://localhost:8090/greek",
-                "http://localhost:8090/roman",
-                "http://localhost:8090/nordic");
-
-        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
-
-        StepVerifier
-                .create(problem.ReactorSolutionAsync())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-
-        executor.shutdown();
-    }
-
-    @Test
-    public void given_ReactorSolutionParallel_when_executeMethod_then_expectedResultsTest() {
-
-        final int TIMEOUT = 2;
-
-        ExecutorService executor = Executors.newFixedThreadPool(10,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("MyExecutor");
-                    return thread;
-                });
-
-        loadStubs();
-
-        final List<String> listOfGods = List.of(
-                "http://localhost:8090/greek",
-                "http://localhost:8090/roman",
-                "http://localhost:8090/nordic");
-
-        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
-
-        StepVerifier
-                .create(problem.ReactorSolutionParallel())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-
-        executor.shutdown();
-    }
-
-    @Test
-    public void given_ReactorSolutionSequential_when_executeMethod_then_expectedResultsTest() {
-
-        final int TIMEOUT = 2;
-
-        ExecutorService executor = Executors.newFixedThreadPool(10,
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("MyExecutor");
-                    return thread;
-                });
-
-        loadStubs();
-
-        final List<String> listOfGods = List.of(
-                "http://localhost:8090/greek",
-                "http://localhost:8090/roman",
-                "http://localhost:8090/nordic");
-
-        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
-
-        StepVerifier
-                .create(problem.ReactorSolutionSequential())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-
-        executor.shutdown();
-    }
-
-    @Override
-    public void given_RxJavaSolution_when_executeMethod_then_expectedResultsTest() {
-
-    }
-
-    @Override
-    public void given_KotlinSolution_when_executeMethod_then_expectedResultsTest() {
-
     }
 
 }
