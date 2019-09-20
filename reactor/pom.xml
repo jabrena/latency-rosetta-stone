@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jab.principles</groupId>
-	<artifactId>rxjava</artifactId>
+	<artifactId>reactor</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
-	<name>rxjava</name>
+	<name>reactor</name>
 	<description>Latency solutions</description>
 
 	<properties>
@@ -24,7 +24,8 @@
 		<commons-lang3.version>3.9</commons-lang3.version>
 		<guava.version>28.0-jre</guava.version>
 
-		<rxjava.version>2.2.12</rxjava.version>
+		<reactor.version>3.3.0.M3</reactor.version>
+
 		<resilience4j.version>0.16.0</resilience4j.version>
 
 		<junit.jupiter.version>5.5.1</junit.jupiter.version>
@@ -37,6 +38,23 @@
 
 		<checkstyle.skip>true</checkstyle.skip>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 
@@ -93,11 +111,37 @@
 			<version>${jackson.version}</version>
 		</dependency>
 
+
 		<dependency>
-			<groupId>io.reactivex.rxjava2</groupId>
-			<artifactId>rxjava</artifactId>
-			<version>${rxjava.version}</version>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-core</artifactId>
+			<version>${reactor.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor.addons</groupId>
+			<artifactId>reactor-extra</artifactId>
+			<version>3.3.0.M1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-tools</artifactId>
+			<version>${reactor.version}</version>
+		</dependency>
+		<!--
+                <dependency>
+                    <groupId>io.projectreactor.tools</groupId>
+                    <artifactId>blockhound</artifactId>
+                    <version>1.0.0.M5</version>
+                </dependency>
+
+                <dependency>
+                    <groupId>io.projectreactor.tools</groupId>
+                    <artifactId>blockhound-junit-platform</artifactId>
+                    <version>1.0.0.M5</version>
+                </dependency>
+        -->
 
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>
@@ -159,6 +203,13 @@
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
 			<version>${assertj-core.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<version>${reactor.version}</version>
 			<scope>test</scope>
 		</dependency>
 
