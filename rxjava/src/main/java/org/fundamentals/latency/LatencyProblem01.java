@@ -3,25 +3,17 @@ package org.fundamentals.latency;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
-import io.reactivex.schedulers.Schedulers;
-import io.vavr.control.Option;
 import io.vavr.control.Try;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 import static org.fundamentals.latency.SimpleCurl.*;
 
 /**
@@ -56,15 +48,6 @@ public class LatencyProblem01 {
         throw new RuntimeException("Bad address", ex);
     });
 
-    Function<String, Stream<String>> serialize = param -> Try.of(() -> {
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<String> deserializedData = objectMapper.readValue(param, new TypeReference<List<String>>() {});
-        return deserializedData.stream();
-    }).getOrElseThrow(ex -> {
-        LOGGER.error("Bad Serialization process", ex);
-        throw new RuntimeException(ex);
-    });
-
     Predicate<String> godStartingByn = s -> s.toLowerCase().charAt(0) == 'n';
 
     Function<String, List<Integer>> toDigits = s -> s.chars()
@@ -76,80 +59,37 @@ public class LatencyProblem01 {
             .collect(Collectors.joining( "" ));
 
     Consumer<String> print = LOGGER::info;
+    Consumer<BigInteger> print2 = bi -> LOGGER.info("{}", bi);
 
-    Function<URL, CompletableFuture<String>> fetchAsync = address -> {
+    Function<List<String>, Observable<List<BigInteger>>> rxFetchListAsync = s -> {
 
-        LOGGER.info("Thread: {}", Thread.currentThread().getName());
-        return CompletableFuture
-                .supplyAsync(() -> fetch.andThen(log).apply(address), executor)
-                .exceptionally(ex -> {
-                    LOGGER.error(ex.getLocalizedMessage(), ex);
-                    return "FETCH_BAD_RESULT";
-                })
-                .completeOnTimeout("[\"FETCH_BAD_RESULT_TIMEOUT\"]", TIMEOUT, TimeUnit.SECONDS);
-    };
-
-    Function<List<String>, Stream<String>> fetchListAsync = s -> {
-        List<CompletableFuture<String>> futureRequests = s.stream()
-                .map(toURL.andThen(fetchAsync))
-                .collect(toList());
-
-        return futureRequests.stream()
-                .map(CompletableFuture::join)
-                .flatMap(serialize);
-    };
-
-    Function<List<String>, Stream<String>> rxFetchListAsync = s -> {
-
-        String observable = Observable.fromIterable(s)
-                .observeOn(Schedulers.io())
+        Observable<List<BigInteger>> call1 = Observable.just(s.get(0))
+                //.subscribeOn(Schedulers.io())
                 .map(str -> toURL.apply(str))
                 .map(u -> fetch.apply(u))
-                .toFuture().get();
+                .map(str -> {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    List<String> deserializedData = objectMapper.readValue(str, new TypeReference<List<String>>() {});
+                    return deserializedData.stream()
+                            .filter(godStartingByn)
+                            .peek(print)
+                            .map(ss -> toDigits.andThen(concatDigits).andThen(BigInteger::new).apply(ss))
+                            .collect(Collectors.toUnmodifiableList());
+                });
 
-        observable.subscribe(str -> {
-            System.out.println(str);
-        });
+        var result = Observable
+                //.subscribeOn(Schedulers.io())
+                .concat(call1, call1);
 
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-                /*
-        List<CompletableFuture<String>> futureRequests = s.stream()
-                .map(toURL.andThen(fetchAsync))
-                .collect(toList());
-
-        return futureRequests.stream()
-                .map(CompletableFuture::join)
-                .flatMap(serialize);
-                 */
-        return List.of("").stream();
+         return result;
     };
 
-    Function<Stream<String>, Stream<String>> filterGods = ls -> ls
-            .filter(godStartingByn)
-            .peek(print);
-
-    Function<Stream<String>, BigInteger> sum = ls -> ls
+    Function<List<String>, BigInteger> sum = ls -> ls.stream()
             .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
             .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
 
-    public BigInteger JavaStreamSolution() {
+    public Observable<List<BigInteger>> rxJavaSolution() {
 
-        return rxFetchListAsync
-                .andThen(filterGods)
-                .andThen(sum)
-                .apply(listOfGods);
-    }
-
-    public BigInteger rxJavaSolution() {
-
-        return rxFetchListAsync
-                .andThen(filterGods)
-                .andThen(sum)
-                .apply(listOfGods);
+        return rxFetchListAsync.apply(listOfGods);
     }
 }

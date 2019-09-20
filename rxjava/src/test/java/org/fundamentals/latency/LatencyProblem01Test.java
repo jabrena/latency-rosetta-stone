@@ -48,6 +48,7 @@ public class LatencyProblem01Test {
                         .withBodyFile("nordic.json")));
     }
 
+    @Disabled
     @Test
     public void given_rxJavaSolution_when_executeMethod_then_expectedResultsTest() {
 
@@ -69,7 +70,11 @@ public class LatencyProblem01Test {
 
         LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
 
-        assertThat(problem.rxJavaSolution()).isEqualTo(new BigInteger("78179288397447443426"));
+        assertThat(problem.rxJavaSolution().test()
+                .assertComplete()
+                .assertNoErrors()
+                .assertValueCount(1)
+                .values().get(0)).isEqualTo(new BigInteger("78179288397447443426"));
 
         executor.shutdown();
     }
