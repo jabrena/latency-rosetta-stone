@@ -3,6 +3,7 @@ package org.fundamentals.latency;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vavr.control.Try;
+import java.time.Duration;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +58,7 @@ public class LatencyProblem01 {
     });
 
     Function<String, Flux<String>> serializeFlux = param -> Try.of(() -> {
+        if(param.length() == 0) return Flux.just("");
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> deserializedData = objectMapper.readValue(param, new TypeReference<List<String>>() {});
         return Mono.just(deserializedData).flatMapMany(Flux::fromIterable);
@@ -65,7 +67,10 @@ public class LatencyProblem01 {
         throw new RuntimeException(ex);
     });
 
-    Predicate<String> godStartingByn = s -> s.toLowerCase().charAt(0) == 'n';
+    Predicate<String> godStartingByn = s -> {
+        if(s.length() == 0) return false;
+        return s.toLowerCase().charAt(0) == 'n';
+    };
 
     Function<Flux<String>, Flux<String>> filterGodsFlux = ls -> ls
             .filter(godStartingByn)
@@ -85,22 +90,25 @@ public class LatencyProblem01 {
 
     private Scheduler scheduler = Schedulers.elastic();
 
-    Function<Integer, Flux<String>> globalFetch = i -> toURL
-            .andThen(fetch)
-            .andThen(serializeFlux)
-            .apply(config.getList().get(i));
-
     Function<Integer, Flux<String>> asyncFetchFlux = limit -> {
         return Flux.range(0, limit)
                 .publishOn(scheduler)
-                .flatMap(globalFetch);
+                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
+                .timeout(
+                        Duration.ofSeconds(config.getTimeout()),
+                        Flux.just(""))
+                .flatMap(serializeFlux);
     };
 
     public Mono<BigInteger> reactorSolution() {
 
         return Flux.range(0, config.getList().size())
                 .publishOn(scheduler)
-                .flatMap(globalFetch)
+                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
+                .timeout(
+                        Duration.ofSeconds(config.getTimeout()),
+                        Flux.just(""))
+                .flatMap(serializeFlux)
                 .filter(godStartingByn)
                 .log()
                 .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
@@ -110,7 +118,11 @@ public class LatencyProblem01 {
     public Mono<BigInteger> reactorSolutionSequential() {
 
         return Flux.range(0, config.getList().size())
-                .flatMap(globalFetch)
+                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
+                .timeout(
+                        Duration.ofSeconds(config.getTimeout()),
+                        Flux.just(""))
+                .flatMap(serializeFlux)
                 .filter(godStartingByn)
                 .log()
                 .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))

@@ -99,4 +99,62 @@ public class LatencyProblem01Test {
                 .verify();
     }
 
+    @Disabled
+    @Test
+    public void given_reactorSolution_when_greek_API_is_slow_then_expectedResultsTest() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/greek"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBodyFile("greek.json")
+                        .withFixedDelay(1000)));
+
+        wireMockServer.stubFor(get(urlEqualTo("/roman"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBodyFile("roman.json")));
+
+        wireMockServer.stubFor(get(urlEqualTo("/nordic"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBodyFile("nordic.json")));
+
+        LatencyProblem01 problem = new LatencyProblem01(getDefaultConfig());
+
+        StepVerifier
+                .create(problem.reactorSolution())
+                .expectNext(new BigInteger("78179288397447443426"))
+                .expectComplete()
+                .verify();
+    }
+
+    @Disabled
+    @Test
+    public void given_reactorSolutionSequential_when_greek_API_is_slow_then_expectedResultsTest() {
+
+        wireMockServer.stubFor(get(urlEqualTo("/greek"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBodyFile("greek.json")
+                        .withFixedDelay(1000)));
+
+        wireMockServer.stubFor(get(urlEqualTo("/roman"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBodyFile("roman.json")));
+
+        wireMockServer.stubFor(get(urlEqualTo("/nordic"))
+                .willReturn(aResponse().withHeader("Content-Type", "application/json")
+                        .withStatus(200)
+                        .withBodyFile("nordic.json")));
+
+        LatencyProblem01 problem = new LatencyProblem01(getDefaultConfig());
+
+        StepVerifier
+                .create(problem.reactorSolutionSequential())
+                .expectNext(new BigInteger("78179288397447443426"))
+                .expectComplete()
+                .verify();
+    }
+
 }
