@@ -3,27 +3,22 @@ package org.fundamentals.latency;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vavr.control.Try;
-import java.util.concurrent.Callable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
-import static java.util.stream.Collectors.toList;
-import static org.fundamentals.latency.SimpleCurl.*;
+import static org.fundamentals.latency.SimpleCurl.fetch;
 
 /**
  * Problem 1
@@ -61,20 +56,6 @@ public class LatencyProblem01 {
         throw new RuntimeException("Bad address", ex);
     });
 
-    Predicate<String> godStartingByn = s -> s.toLowerCase().charAt(0) == 'n';
-
-    Function<String, List<Integer>> toDigits = s -> s.chars()
-            .mapToObj(is -> Integer.valueOf(is))
-            .collect(Collectors.toList());
-
-    Function<List<Integer>, String> concatDigits = li -> li.stream()
-            .map(String::valueOf)
-            .collect(Collectors.joining( "" ));
-
-    Consumer<String> print = LOGGER::info;
-
-    private Scheduler scheduler = Schedulers.newElastic("MyScheduler");
-
     Function<String, Flux<String>> serializeFlux = param -> Try.of(() -> {
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> deserializedData = objectMapper.readValue(param, new TypeReference<List<String>>() {});
@@ -84,52 +65,66 @@ public class LatencyProblem01 {
         throw new RuntimeException(ex);
     });
 
+    Predicate<String> godStartingByn = s -> s.toLowerCase().charAt(0) == 'n';
+
     Function<Flux<String>, Flux<String>> filterGodsFlux = ls -> ls
             .filter(godStartingByn)
             .log();
+
+    Function<String, List<Integer>> toDigits = s -> s.chars()
+            .mapToObj(is -> Integer.valueOf(is))
+            .collect(Collectors.toList());
+
+    Function<List<Integer>, String> concatDigits = li -> li.stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining( "" ));
 
     Function<Flux<String>, Mono<BigInteger>> sumFlux = ls -> ls
             .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
             .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
 
+    private Scheduler scheduler = Schedulers.elastic();
+
+    Function<Integer, Flux<String>> globalFetch = i -> toURL
+            .andThen(fetch)
+            .andThen(serializeFlux)
+            .apply(config.getList().get(i));
+
     Function<Integer, Flux<String>> asyncFetchFlux = limit -> {
         return Flux.range(0, limit)
-                .flatMap(i -> {
-                    return toURL
-                            .andThen(fetch)
-                            .andThen(serializeFlux)
-                            .apply(config.getList().get(i));
-                })
-                .subscribeOn(scheduler);
+                .publishOn(scheduler)
+                .flatMap(globalFetch);
     };
 
     public Mono<BigInteger> reactorSolution() {
 
         return Flux.range(0, config.getList().size())
                 .publishOn(scheduler)
-                .flatMap(i -> toURL.andThen(fetch).andThen(serializeFlux).apply(config.getList().get(i)))
+                .flatMap(globalFetch)
                 .filter(godStartingByn)
                 .log()
                 .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
                 .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
     }
 
+    public Mono<BigInteger> reactorSolutionSequential() {
+
+        return Flux.range(0, config.getList().size())
+                .flatMap(globalFetch)
+                .filter(godStartingByn)
+                .log()
+                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
+                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
+    }
+
+    //This implementation follow functional composition ideas from Java 8+
+    //But this is not the Reactor way
     public Mono<BigInteger> reactorSolutionFunctionalComposition() {
 
         return asyncFetchFlux
                 .andThen(filterGodsFlux)
                 .andThen(sumFlux)
                 .apply(config.getList().size());
-    }
-
-    public Mono<BigInteger> reactorSolutionSequential() {
-
-        return Flux.range(0, config.getList().size())
-                .flatMap(i -> toURL.andThen(fetch).andThen(serializeFlux).apply(config.getList().get(i)))
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
     }
 
 }
