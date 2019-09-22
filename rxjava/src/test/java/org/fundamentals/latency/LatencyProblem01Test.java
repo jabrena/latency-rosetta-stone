@@ -35,17 +35,17 @@ public class LatencyProblem01Test {
         wireMockServer.stubFor(get(urlEqualTo("/greek"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json")
                         .withStatus(200)
-                        .withBodyFile("greek.json")));
+                        .withBodyFile("latency-problem1/greek.json")));
 
         wireMockServer.stubFor(get(urlEqualTo("/roman"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json")
                         .withStatus(200)
-                        .withBodyFile("roman.json")));
+                        .withBodyFile("latency-problem1/roman.json")));
 
         wireMockServer.stubFor(get(urlEqualTo("/nordic"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json")
                         .withStatus(200)
-                        .withBodyFile("nordic.json")));
+                        .withBodyFile("latency-problem1/nordic.json")));
     }
 
     @Disabled

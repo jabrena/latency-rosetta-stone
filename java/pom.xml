@@ -39,6 +39,14 @@
 
 	<dependencies>
 
+		<!-- Common features -->
+		<dependency>
+			<groupId>org.jab.principles</groupId>
+			<artifactId>domain</artifactId>
+			<version>0.1.0-SNAPSHOT</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

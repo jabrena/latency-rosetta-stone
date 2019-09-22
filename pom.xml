@@ -18,6 +18,7 @@
 	</developers>
 
 	<modules>
+		<module>domain</module>
 		<module>java</module>
 		<module>rxjava</module>
 		<module>reactor</module>

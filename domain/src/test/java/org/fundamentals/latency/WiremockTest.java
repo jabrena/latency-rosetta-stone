@@ -35,10 +35,10 @@ public class WiremockTest {
                         .withStatus(200)
                         .withBodyFile("books.json")));
 
-        given().
-        when().
-        get("http://localhost:8090/an/endpoint").
-        then().
-        assertThat().statusCode(200);
+        given()
+                .when()
+                .get("http://localhost:8090/an/endpoint")
+                .then()
+                .assertThat().statusCode(200);
     }
 }

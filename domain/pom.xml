@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jab.principles</groupId>
-	<artifactId>rxjava</artifactId>
+	<artifactId>domain</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
-	<name>rxjava</name>
+	<name>domain</name>
 	<description>Latency solutions</description>
 
 	<properties>
@@ -21,15 +21,10 @@
 		<logback-classic.version>1.2.3</logback-classic.version>
 		<jackson.version>2.9.9</jackson.version>
 
-		<commons-lang3.version>3.9</commons-lang3.version>
-		<guava.version>28.0-jre</guava.version>
-
-		<rxjava.version>2.2.12</rxjava.version>
-		<resilience4j.version>0.16.0</resilience4j.version>
-
 		<junit.jupiter.version>5.5.1</junit.jupiter.version>
 		<hamcrest.version>1.3</hamcrest.version>
 		<assertj-core.version>3.13.1</assertj-core.version>
+
 		<rest-assured.version>4.0.0</rest-assured.version>
 		<wiremock.version>2.24.1</wiremock.version>
 
@@ -39,14 +34,6 @@
 	</properties>
 
 	<dependencies>
-
-		<!-- Common features -->
-		<dependency>
-			<groupId>org.jab.principles</groupId>
-			<artifactId>domain</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
-			<scope>provided</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -59,18 +46,6 @@
 			<groupId>io.vavr</groupId>
 			<artifactId>vavr</artifactId>
 			<version>${vavr.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
-			<version>${commons-lang3.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>${guava.version}</version>
 		</dependency>
 
 		<dependency>
@@ -99,42 +74,6 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.reactivex.rxjava2</groupId>
-			<artifactId>rxjava</artifactId>
-			<version>${rxjava.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-all</artifactId>
-			<version>${resilience4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-circuitbreaker</artifactId>
-			<version>${resilience4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-ratelimiter</artifactId>
-			<version>${resilience4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-retry</artifactId>
-			<version>${resilience4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-bulkhead</artifactId>
-			<version>${resilience4j.version}</version>
 		</dependency>
 
 		<dependency>
@@ -171,6 +110,19 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock</artifactId>
+			<version>${wiremock.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<version>${rest-assured.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-core</artifactId>
 			<version>${jmh.version}</version>
@@ -181,19 +133,6 @@
 			<groupId>org.openjdk.jmh</groupId>
 			<artifactId>jmh-generator-annprocess</artifactId>
 			<version>${jmh.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <version>${wiremock.version}</version>
-        </dependency>
-
-		<dependency>
-			<groupId>io.rest-assured</groupId>
-			<artifactId>rest-assured</artifactId>
-			<version>${rest-assured.version}</version>
 			<scope>test</scope>
 		</dependency>
 
