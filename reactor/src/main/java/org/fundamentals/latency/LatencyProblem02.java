@@ -88,6 +88,7 @@ public class LatencyProblem02 {
     };
 
     Function<Flux<String>, Flux<Tuple2<String, Integer>>> fetchWikipediaGodInfo = god -> {
+
         return Flux.from(god)
                 .publishOn(Schedulers.elastic())
                 .map(str -> {
@@ -101,6 +102,7 @@ public class LatencyProblem02 {
     };
 
     Function<Flux<Tuple2<String, Integer>>, Flux<String>> max = godInfo -> {
+
         return Flux.from(godInfo)
                 .publishOn(Schedulers.immediate())
                 .sort(Comparator.comparing(Tuple2::_2))
