@@ -40,7 +40,7 @@ import static org.fundamentals.latency.SimpleCurl.fetch;
 @Slf4j
 public class LatencyProblem02 {
 
-    public static enum KEYS {
+    public enum KEYS {
         GREEK,
         WIKIPEDIA;
     }
