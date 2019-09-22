@@ -37,17 +37,17 @@ public class LatencyProblem02Test {
         wireMockServer.stubFor(get(urlEqualTo("/greek"))
                 .willReturn(aResponse().withHeader("Content-Type", "application/json")
                         .withStatus(200)
-                        .withBodyFile("greek.json")));
+                        .withBodyFile("latency-problem2/greek.json")));
 
         wireMockServer.stubFor(get(urlPathEqualTo("/wiki/Apollo"))
                 .willReturn(aResponse().withHeader("Content-Type", "text/html; charset=utf-8")
                         .withStatus(200)
-                        .withBodyFile("apollo.html")));
+                        .withBodyFile("latency-problem2/apollo.html")));
 
         wireMockServer.stubFor(get(urlMatching("/wiki/(Zeus|Hera|Poseidon|Demeter|Ares|Athena|Artemis|Hephaestus|Aphrodite|Hermes|Dionysus|Hades|Hypnos|Nike|Janus|Nemesis|Iris|Hecate|Tyche)"))
                 .willReturn(aResponse().withHeader("Content-Type", "text/html; charset=utf-8")
                         .withStatus(200)
-                        .withBodyFile("zeus.html")));
+                        .withBodyFile("latency-problem2/zeus.html")));
 
     }
 

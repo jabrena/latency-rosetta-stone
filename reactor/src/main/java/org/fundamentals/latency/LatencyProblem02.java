@@ -77,30 +77,45 @@ public class LatencyProblem02 {
 
     Function<String, String> generateWikiAddress = god -> this.config.apiMap.get(WIKIPEDIA) + "/" + god;
 
-    public Mono<String> reactorSolution() {
+    Function<Flux<String>, Flux<String>> fetchGreekGods = str -> {
 
-        return Mono.just(this.config.getApiMap().get(GREEK))
+        return Flux.from(str)
+                .publishOn(Schedulers.immediate())
                 .map(toURL)
                 .map(fetch)
-                .map(content -> {
+                .flatMap(serializeFlux)
+                .log();
+    };
 
-                    return Flux.just(content)
-                            .flatMap(serializeFlux)
-                            .publishOn(Schedulers.elastic())
-                            .map(god -> {
-                                return new Tuple2<String, Integer>(god, generateWikiAddress
-                                        .andThen(toURL)
-                                        .andThen(fetch)
-                                        .andThen(String::length)
-                                        .apply(god));
-                            })
-                            .publishOn(Schedulers.immediate())
-                            .sort(Comparator.comparing(Tuple2::_2))
-                            .takeLast(1)
-                            .map(t -> t._1)
-                            .log()
-                            .blockLast();//TODO Review how to remove this block
-                });
+    Function<Flux<String>, Flux<Tuple2<String, Integer>>> fetchWikipediaGodInfo = god -> {
+        return Flux.from(god)
+                .publishOn(Schedulers.elastic())
+                .map(str -> {
+                    return new Tuple2<String, Integer>(str, generateWikiAddress
+                            .andThen(toURL)
+                            .andThen(fetch)
+                            .andThen(String::length)
+                            .apply(str));
+                })
+                .log();
+    };
+
+    Function<Flux<Tuple2<String, Integer>>, Flux<String>> max = godInfo -> {
+        return Flux.from(godInfo)
+                .publishOn(Schedulers.immediate())
+                .sort(Comparator.comparing(Tuple2::_2))
+                .takeLast(1)
+                .map(t -> t._1)
+                .log();
+    };
+
+    public Mono<String> reactorSolution() {
+
+            return Flux.just(this.config.getApiMap().get(GREEK))
+                .transform(fetchGreekGods)
+                .transform(fetchWikipediaGodInfo)
+                .transform(max)
+                .next();
     }
 
 }
