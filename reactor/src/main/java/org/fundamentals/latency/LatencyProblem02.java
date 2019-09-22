@@ -77,9 +77,9 @@ public class LatencyProblem02 {
 
     Function<String, String> generateWikiAddress = god -> this.config.apiMap.get(WIKIPEDIA) + "/" + god;
 
-    Function<Flux<String>, Flux<String>> fetchGreekGods = str -> {
+    Function<Object, Flux<String>> fetchGreekGods = obj -> {
 
-        return Flux.from(str)
+        return Flux.just(this.config.getApiMap().get(GREEK))
                 .publishOn(Schedulers.immediate())
                 .map(toURL)
                 .map(fetch)
@@ -113,7 +113,7 @@ public class LatencyProblem02 {
 
     public Mono<String> reactorSolution() {
 
-            return Flux.just(this.config.getApiMap().get(GREEK))
+            return Flux.empty()
                 .transform(fetchGreekGods)
                 .transform(fetchWikipediaGodInfo)
                 .transform(max)
