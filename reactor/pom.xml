@@ -137,19 +137,18 @@
 			<artifactId>reactor-tools</artifactId>
 			<version>${reactor.version}</version>
 		</dependency>
-		<!--
-                <dependency>
-                    <groupId>io.projectreactor.tools</groupId>
-                    <artifactId>blockhound</artifactId>
-                    <version>1.0.0.M5</version>
-                </dependency>
 
-                <dependency>
-                    <groupId>io.projectreactor.tools</groupId>
-                    <artifactId>blockhound-junit-platform</artifactId>
-                    <version>1.0.0.M5</version>
-                </dependency>
-        -->
+		<dependency>
+			<groupId>io.projectreactor.tools</groupId>
+			<artifactId>blockhound</artifactId>
+			<version>1.0.0.M5</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor.tools</groupId>
+			<artifactId>blockhound-junit-platform</artifactId>
+			<version>1.0.0.M5</version>
+		</dependency>
 
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>
