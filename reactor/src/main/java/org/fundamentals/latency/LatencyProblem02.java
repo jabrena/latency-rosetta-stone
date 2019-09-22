@@ -78,6 +78,7 @@ public class LatencyProblem02 {
     Function<String, String> generateWikiAddress = god -> this.config.apiMap.get(WIKIPEDIA) + "/" + god;
 
     public Mono<String> reactorSolution() {
+
         return Mono.just(this.config.getApiMap().get(GREEK))
                 .map(toURL)
                 .map(fetch)
