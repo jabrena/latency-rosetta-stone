@@ -63,7 +63,8 @@ public class LatencyProblem01 {
     }
 
     Function<String, URL> toURL = address -> Try.of(() ->
-            new URL(address)).getOrElseThrow(ex -> {
+            new URL(address))
+    .getOrElseThrow(ex -> {
         LOGGER.error(ex.getLocalizedMessage(), ex);
         throw new RuntimeException("Bad address", ex);
     });
