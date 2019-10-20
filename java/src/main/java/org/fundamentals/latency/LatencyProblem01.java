@@ -11,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -137,8 +138,8 @@ public class LatencyProblem01 {
         return futureRequests.stream()
                 .map(cf -> {
                     try {
-                        return cf.get();
-                    } catch (InterruptedException | ExecutionException e) {
+                        return cf.get(TIMEOUT, TimeUnit.SECONDS);
+                    } catch (InterruptedException | ExecutionException | TimeoutException e) {
                         return DEFAULT_FETCH_ERROR;
                     }
                 })
