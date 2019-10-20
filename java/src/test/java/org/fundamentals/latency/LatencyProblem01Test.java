@@ -1,14 +1,12 @@
 package org.fundamentals.latency;
 
-import java.math.BigInteger;
-
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,6 +101,33 @@ public class LatencyProblem01Test {
         LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
 
         assertThat(problem.Java8StreamSolution()).isEqualTo(new BigInteger("78179288397447443426"));
+
+        executor.shutdown();
+    }
+
+    @Disabled
+    @Test
+    public void given_JavaCFCompositionSolution_when_executeMethod_then_expectedResultsTest() {
+
+        final int TIMEOUT = 2;
+
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("MyExecutor-%d")
+                .build();
+        ExecutorService executor = Executors.newFixedThreadPool(
+                10,
+                threadFactory);
+
+        loadStubs();
+
+        final List<String> listOfGods = List.of(
+                "http://localhost:8090/greek",
+                "http://localhost:8090/roman",
+                "http://localhost:8090/nordic");
+
+        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
+
+        assertThat(problem.JavaCFCompositionSolution()).isEqualTo(new BigInteger("78179288397447443426"));
 
         executor.shutdown();
     }

@@ -90,7 +90,7 @@ public class LatencyProblem01 {
                 .completeOnTimeout(DEFAULT_FETCH_ERROR, TIMEOUT, TimeUnit.SECONDS);
     };
 
-    Function<URL, CompletableFuture<String>> fetchAsync2 = address -> {
+    Function<URL, CompletableFuture<String>> fetchAsyncJ9 = address -> {
 
         LOGGER.info("Thread: {}", Thread.currentThread().getName());
         return CompletableFuture
@@ -122,12 +122,30 @@ public class LatencyProblem01 {
 
     Function<List<String>, Stream<String>> fetchListAsync = s -> {
         List<CompletableFuture<String>> futureRequests = s.stream()
-                .map(toURL.andThen(fetchAsync2))
+                .map(toURL.andThen(fetchAsyncJ9))
                 .collect(toList());
 
         return futureRequests.stream()
                 .map(CompletableFuture::join)
                 .flatMap(serialize); //Not safe code
+    };
+
+    //Open question
+    //https://stackoverflow.com/questions/58474378/is-it-possible-to-combine-more-than-2-completablefuture-in-java-8-11
+    Function<List<String>, Stream<String>> fetchListAsyncCFComposition = list -> {
+
+        URL url1 = toURL.apply(list.get(0));
+        URL url2 = toURL.apply(list.get(1));
+        URL url3 = toURL.apply(list.get(2));
+
+        CompletableFuture<List<String>> completableFuture =
+                CompletableFuture.supplyAsync(() -> fetch.andThen(log).apply(url1))
+                .thenCombine(CompletableFuture.supplyAsync(() -> fetch.andThen(log).apply(url2)),
+                //.thenCombine(CompletableFuture.supplyAsync(() -> fetch.andThen(log).apply(url3)),
+                (s1, s2) -> List.of(s1,s2));
+                //(s1, s2, s3) -> List.of(s1, s2, s3));
+
+        return completableFuture.join().stream().flatMap(serialize);
     };
 
     Function<List<String>, Stream<String>> fetchListAsyncJ8 = s -> {
@@ -143,7 +161,7 @@ public class LatencyProblem01 {
                         return DEFAULT_FETCH_ERROR;
                     }
                 })
-                .flatMap(serialize);//Not safe code
+                .flatMap(serialize);
     };
 
     Function<Stream<String>, Stream<String>> filterGods = ls -> ls
@@ -165,6 +183,14 @@ public class LatencyProblem01 {
     public BigInteger Java8StreamSolution() {
 
         return fetchListAsyncJ8
+                .andThen(filterGods)
+                .andThen(sum)
+                .apply(listOfGods);
+    }
+
+    public BigInteger JavaCFCompositionSolution() {
+
+        return fetchListAsyncCFComposition
                 .andThen(filterGods)
                 .andThen(sum)
                 .apply(listOfGods);
