@@ -114,6 +114,7 @@
 			<version>${reactor.version}</version>
 		</dependency>
 
+		<!--
 		<dependency>
 			<groupId>io.projectreactor.tools</groupId>
 			<artifactId>blockhound</artifactId>
@@ -125,6 +126,7 @@
 			<artifactId>blockhound-junit-platform</artifactId>
 			<version>1.0.0.M5</version>
 		</dependency>
+		-->
 
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>

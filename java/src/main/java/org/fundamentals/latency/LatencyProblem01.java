@@ -6,7 +6,9 @@ import io.vavr.control.Try;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -73,6 +75,8 @@ public class LatencyProblem01 {
 
     Consumer<String> print = LOGGER::info;
 
+    final String DEFAULT_FETCH_ERROR = "[\"FETCH_BAD_RESULT\"]";
+
     Function<URL, CompletableFuture<String>> fetchAsync = address -> {
 
         LOGGER.info("Thread: {}", Thread.currentThread().getName());
@@ -80,19 +84,65 @@ public class LatencyProblem01 {
                 .supplyAsync(() -> fetch.andThen(log).apply(address), executor)
                 .exceptionally(ex -> {
                     LOGGER.error(ex.getLocalizedMessage(), ex);
-                    return "FETCH_BAD_RESULT";
+                    return DEFAULT_FETCH_ERROR;
                 })
-                .completeOnTimeout("[\"FETCH_BAD_RESULT_TIMEOUT\"]", TIMEOUT, TimeUnit.SECONDS);
+                .completeOnTimeout(DEFAULT_FETCH_ERROR, TIMEOUT, TimeUnit.SECONDS);
+    };
+
+    Function<URL, CompletableFuture<String>> fetchAsync2 = address -> {
+
+        LOGGER.info("Thread: {}", Thread.currentThread().getName());
+        return CompletableFuture
+                .supplyAsync(() -> fetch.andThen(log).apply(address), executor)
+                .orTimeout(TIMEOUT, TimeUnit.SECONDS)
+                .handle((response, ex) -> {
+                    if(!Objects.isNull(ex)) {
+                        LOGGER.error(ex.getLocalizedMessage(), ex);
+                        return DEFAULT_FETCH_ERROR;
+                    }
+                    return response;
+                });
+    };
+
+    Function<URL, CompletableFuture<String>> fetchAsyncJ8 = address -> {
+
+        LOGGER.info("Thread: {}", Thread.currentThread().getName());
+        return CompletableFuture
+                .supplyAsync(() ->
+                    fetch.andThen(log).apply(address), executor)
+                .handle((response, ex) -> {
+                    if(!Objects.isNull(ex)) {
+                        LOGGER.error(ex.getLocalizedMessage(), ex);
+                        return DEFAULT_FETCH_ERROR;
+                    }
+                    return response;
+                });
     };
 
     Function<List<String>, Stream<String>> fetchListAsync = s -> {
         List<CompletableFuture<String>> futureRequests = s.stream()
-                .map(toURL.andThen(fetchAsync))
+                .map(toURL.andThen(fetchAsync2))
                 .collect(toList());
 
         return futureRequests.stream()
                 .map(CompletableFuture::join)
-                .flatMap(serialize);
+                .flatMap(serialize); //Not safe code
+    };
+
+    Function<List<String>, Stream<String>> fetchListAsyncJ8 = s -> {
+        List<CompletableFuture<String>> futureRequests = s.stream()
+                .map(toURL.andThen(fetchAsyncJ8))
+                .collect(toList());
+
+        return futureRequests.stream()
+                .map(cf -> {
+                    try {
+                        return cf.get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        return DEFAULT_FETCH_ERROR;
+                    }
+                })
+                .flatMap(serialize);//Not safe code
     };
 
     Function<Stream<String>, Stream<String>> filterGods = ls -> ls
@@ -106,6 +156,14 @@ public class LatencyProblem01 {
     public BigInteger JavaStreamSolution() {
 
         return fetchListAsync
+                .andThen(filterGods)
+                .andThen(sum)
+                .apply(listOfGods);
+    }
+
+    public BigInteger Java8StreamSolution() {
+
+        return fetchListAsyncJ8
                 .andThen(filterGods)
                 .andThen(sum)
                 .apply(listOfGods);

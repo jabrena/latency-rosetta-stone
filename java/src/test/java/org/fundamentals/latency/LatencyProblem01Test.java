@@ -81,6 +81,32 @@ public class LatencyProblem01Test {
         executor.shutdown();
     }
 
+    @Test
+    public void given_Java8StreamSolution_when_executeMethod_then_expectedResultsTest() {
+
+        final int TIMEOUT = 2;
+
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("MyExecutor-%d")
+                .build();
+        ExecutorService executor = Executors.newFixedThreadPool(
+                10,
+                threadFactory);
+
+        loadStubs();
+
+        final List<String> listOfGods = List.of(
+                "http://localhost:8090/greek",
+                "http://localhost:8090/roman",
+                "http://localhost:8090/nordic");
+
+        LatencyProblem01 problem = new LatencyProblem01(listOfGods, executor, TIMEOUT);
+
+        assertThat(problem.Java8StreamSolution()).isEqualTo(new BigInteger("78179288397447443426"));
+
+        executor.shutdown();
+    }
+
     @Disabled
     @Tag("endtoend")
     @Test
