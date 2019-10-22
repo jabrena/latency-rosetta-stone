@@ -114,17 +114,20 @@ public class LatencyProblem01 {
                 .onErrorResume(ex -> DEFAULT_FALLBACK);
     };
 
+    Function<Flux<Object>, Flux<String>> asyncFetchFlux2 = list -> {
+        return Flux.fromStream(config.getList().stream())
+                .publishOn(scheduler)
+                .map(i -> toURL.andThen(fetch).apply(i))
+                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
+                .log()
+                .flatMap(serializeFlux)
+                .onErrorResume(ex -> DEFAULT_FALLBACK);
+    };
+
     public Mono<BigInteger> reactorSolution() {
 
-        return Flux.range(0, config.getList().size())
-                //.flatMap(asyncFetchFlux)
-
-                .publishOn(scheduler)
-                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .log()
-                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
-                .flatMap(serializeFlux)
-
+        return Flux.empty()
+                .transform(asyncFetchFlux2)
                 .filter(godStartingByn)
                 .transform(sumFlux)
                 .doOnError(ex -> LOGGER.warn(ex.getLocalizedMessage(), ex))
