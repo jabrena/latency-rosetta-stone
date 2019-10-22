@@ -102,38 +102,58 @@ public class LatencyProblem01 {
 
     private Scheduler scheduler = Schedulers.elastic();
 
+    final Flux<String> DEFAULT_FALLBACK = Flux.just("{[]}");
+
     Function<Integer, Flux<String>> asyncFetchFlux = limit -> {
         return Flux.range(0, limit)
                 .publishOn(scheduler)
                 .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .timeout(
-                        Duration.ofSeconds(config.getTimeout()),
-                        Flux.just(""))
-                .flatMap(serializeFlux);
+                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
+                .log()
+                .flatMap(serializeFlux)
+                .onErrorResume(ex -> DEFAULT_FALLBACK);
     };
 
     public Mono<BigInteger> reactorSolution() {
 
         return Flux.range(0, config.getList().size())
+                //.flatMap(asyncFetchFlux)
+
                 .publishOn(scheduler)
                 .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .timeout(
-                        Duration.ofSeconds(config.getTimeout()),
-                        Flux.just(""))
+                .log()
+                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
                 .flatMap(serializeFlux)
+
+                .filter(godStartingByn)
+                .transform(sumFlux)
+                .doOnError(ex -> LOGGER.warn(ex.getLocalizedMessage(), ex))
+                .onErrorReturn(BigInteger.ZERO)
+                .next();
+    }
+
+    public Mono<BigInteger> reactorSolutionLarge() {
+
+        return Flux.range(0, config.getList().size())
+                .publishOn(scheduler)
+                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
+                .log()
+                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
+                .flatMap(serializeFlux)
+                .onErrorResume(ex -> DEFAULT_FALLBACK)
                 .filter(godStartingByn)
                 .log()
                 .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
+                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2))
+                .doOnError(ex -> LOGGER.warn(ex.getLocalizedMessage(), ex))
+                .onErrorReturn(BigInteger.ZERO);
     }
 
     public Mono<BigInteger> reactorSolutionSequential() {
 
         return Flux.range(0, config.getList().size())
                 .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .timeout(
-                        Duration.ofSeconds(config.getTimeout()),
-                        Flux.just(""))
+                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
                 .flatMap(serializeFlux)
                 .filter(godStartingByn)
                 .log()
