@@ -32,24 +32,4 @@ public class LatencyProblem01Benchmark {
                 .verify();
     }
 
-    @Benchmark
-    public void ReactorSolutionFunctionalComposition(St st) {
-
-        StepVerifier
-                .create(st.problem.reactorSolutionFunctionalComposition())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-    }
-
-    @Benchmark
-    public void ReactorSolutionSequential(St st) {
-
-        StepVerifier
-                .create(st.problem.reactorSolutionSequential())
-                .expectNext(new BigInteger("78179288397447443426"))
-                .expectComplete()
-                .verify();
-    }
-
 }

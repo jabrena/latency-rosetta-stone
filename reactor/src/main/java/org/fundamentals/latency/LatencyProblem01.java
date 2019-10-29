@@ -84,10 +84,6 @@ public class LatencyProblem01 {
         return s.toLowerCase().charAt(0) == 'n';
     };
 
-    Function<Flux<String>, Flux<String>> filterGodsFlux = ls -> ls
-            .filter(godStartingByn)
-            .log();
-
     Function<String, List<Integer>> toDigits = s -> s.chars()
             .mapToObj(is -> Integer.valueOf(is))
             .collect(Collectors.toList());
@@ -104,18 +100,8 @@ public class LatencyProblem01 {
 
     final Flux<String> DEFAULT_FALLBACK = Flux.just("{[]}");
 
-    Function<Integer, Flux<String>> asyncFetchFlux = limit -> {
-        return Flux.range(0, limit)
-                .publishOn(scheduler)
-                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
-                .log()
-                .flatMap(serializeFlux)
-                .onErrorResume(ex -> DEFAULT_FALLBACK);
-    };
-
-    Function<Flux<Object>, Flux<String>> asyncFetchFlux2 = list -> {
-        return Flux.fromStream(config.getList().stream())
+    Function<String, Flux<String>> asyncFetchFlux = list -> {
+        return Flux.just(list)
                 .publishOn(scheduler)
                 .map(i -> toURL.andThen(fetch).apply(i))
                 .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
@@ -126,52 +112,13 @@ public class LatencyProblem01 {
 
     public Mono<BigInteger> reactorSolution() {
 
-        return Flux.empty()
-                .transform(asyncFetchFlux2)
+        return Flux.fromIterable(config.getList())
+                .flatMap(asyncFetchFlux)
                 .filter(godStartingByn)
                 .transform(sumFlux)
                 .doOnError(ex -> LOGGER.warn(ex.getLocalizedMessage(), ex))
                 .onErrorReturn(BigInteger.ZERO)
                 .next();
-    }
-
-    public Mono<BigInteger> reactorSolutionLarge() {
-
-        return Flux.range(0, config.getList().size())
-                .publishOn(scheduler)
-                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .log()
-                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
-                .flatMap(serializeFlux)
-                .onErrorResume(ex -> DEFAULT_FALLBACK)
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2))
-                .doOnError(ex -> LOGGER.warn(ex.getLocalizedMessage(), ex))
-                .onErrorReturn(BigInteger.ZERO);
-    }
-
-    public Mono<BigInteger> reactorSolutionSequential() {
-
-        return Flux.range(0, config.getList().size())
-                .map(i -> toURL.andThen(fetch).apply(config.getList().get(i)))
-                .timeout(Duration.ofSeconds(config.getTimeout()), DEFAULT_FALLBACK)
-                .flatMap(serializeFlux)
-                .filter(godStartingByn)
-                .log()
-                .map(toDigits.andThen(concatDigits).andThen(BigInteger::new))
-                .reduce(BigInteger.ZERO, (l1, l2) -> l1.add(l2));
-    }
-
-    //This implementation follow functional composition ideas from Java 8+
-    //But this is not the Reactor way
-    public Mono<BigInteger> reactorSolutionFunctionalComposition() {
-
-        return asyncFetchFlux
-                .andThen(filterGodsFlux)
-                .andThen(sumFlux)
-                .apply(config.getList().size());
     }
 
 }
