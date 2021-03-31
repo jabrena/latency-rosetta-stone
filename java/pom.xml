@@ -22,7 +22,7 @@
 		<jackson.version>2.10.1</jackson.version>
 
 		<commons-lang3.version>3.9</commons-lang3.version>
-		<guava.version>28.0-jre</guava.version>
+		<guava.version>29.0-jre</guava.version>
 
 		<resilience4j.version>0.16.0</resilience4j.version>
 
