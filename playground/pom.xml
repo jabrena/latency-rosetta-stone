@@ -19,7 +19,7 @@
 
 		<slf4j-api.version>1.7.25</slf4j-api.version>
 		<logback-classic.version>1.2.3</logback-classic.version>
-		<jackson.version>2.10.0</jackson.version>
+		<jackson.version>2.12.6.1</jackson.version>
 
 		<reactor.version>3.3.0.M3</reactor.version>
 
